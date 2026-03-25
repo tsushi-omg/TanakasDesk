@@ -1,6 +1,6 @@
 
 /**
- * App：置換（正規表現対応）
+ * App：置換
  */
 async function replacerApp() {
     

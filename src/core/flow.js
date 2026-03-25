@@ -312,7 +312,7 @@ function load(){
 
     // ロケーションナビ**
     {
-        const color = {disable: "#8b8b8b", useAble: "#e7e7e7"}
+        const color = {disable: "#7c8aa0", useAble: "#e7e7e7"}
 
         // 生成
         const LMNavi =  Utils.createDOM("div","LMNavi-Container",header);
@@ -639,23 +639,37 @@ function build (){
             // １　フォルダ
             //
             case DATABASE.types.folder:{
-                //
+                
+                // 生成
                 const container = Utils.createDOM("div","explorer-items-container",parent);
                 const folder = Utils.createDOM("div","explorer-folder",container);
-                //
+                
+                // 子要素数取得
                 const childCount = DATABASE.dataObj.data.filter(a=>
                     a.parentId == obj.id
                 ).length;
-                //
-                let lockIcon = Utils.createDOM("span", "iconButton");
+
+                // フォルダ名表示
+                folder.textContent = obj.name + `（${childCount}）`;
+                
+                // フォルダアイコン挿入
+                let folderIcon = Utils.createDOM("span", "iconButton");
+                folderIcon.innerHTML = Icon.blackFolder;
+                folder.prepend(folderIcon)
+
+                // ロックアイコン挿入
+                let lockIcon = Utils.createDOM("span", "iconButton", folder);
                 if(obj.readOnly){
                     lockIcon.innerHTML = Icon.lock;
                 }
-                folder.innerHTML = Icon.blackFolder +  obj.name + lockIcon.innerHTML + `（${childCount}）`;
+
+                // コンテナにID埋め込み
                 container.dataset.id = obj.id;
-                //
+                
+                // 最上階層なら表示
                 if(obj.parentId != "") container.hidden = true;
-                //
+                
+                // 親が非表示なら非表示
                 if(obj.parentId){
                     const parentObj = DATABASE.dataObj.data.find(a=>
                         a.id == obj.parentId
@@ -663,35 +677,33 @@ function build (){
                     if(parentObj.closed) container.hidden = true;
                     else container.hidden = false;
                 }
+
                 // DnDバインド
                 if(!obj.readOnly) bindDnD(folder, obj);
-                //
-                // 可視切替
+                
+                // クリックイベント
                 folder.addEventListener("click", ()=> {
+                    // 子要素可視切替
                     let closedState = false;
-                    //
                     for(let ch of container.children){
-                        //
                         if(ch == folder) continue;
-                        //
                         ch.hidden = !ch.hidden;
                         if(ch.hidden) closedState = true;
                     }
-                    //
+                    // 開閉プロパティ更新
                     obj.closed = closedState;
                 })
-                //
-                // 作成メニュー
+                
+                // 右クリックイベント
                 folder.addEventListener("contextmenu", (e)=> {
-                    //
                     e.preventDefault();
                     if(e.target != folder) return;
-                    //
+                    // 編集不可
                     if(obj.readOnly){
                         Utils.fadeMassage("読み取り専用");
                         return;
                     }
-                    //
+                    // 作成メニュー
                     var orderArr = [
                         { printName: "新規フォルダ", icon: Icon.blackFolder, func: ()=> createNew(DATABASE.types.folder, obj.id) },
                         { printName: "新規ノート", icon: Icon.notes, func: ()=> createNew(DATABASE.types.note, obj.id) },
@@ -700,7 +712,8 @@ function build (){
                     ];
                     Utils.createMenu(orderArr);
                 })
-                //
+                
+                // case end.
                 break;
             }
             //

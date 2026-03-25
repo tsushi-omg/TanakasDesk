@@ -161,7 +161,7 @@ class LocationManager{
         
         // すでに最古ロケーション
         if(activeObj.number == 1) {
-            Utils.fadeMassage("最古のロケーションです");
+            Utils.fadeMassage("最も古いロケーションです");
             return;
         }
 
