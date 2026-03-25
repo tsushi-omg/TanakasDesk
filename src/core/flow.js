@@ -1,3 +1,4 @@
+
 /**
  * DB
  */
@@ -133,6 +134,9 @@ class DATABASE{
 
             this.dataObj = JSON.parse(localData);
 
+            // 読み込み後初期化処理
+            loadInit();
+
             build();
 
             Utils.fadeMassage("データを読み込みました")
@@ -225,6 +229,9 @@ class DATABASE{
                 try{
                     this.dataObj = JSON.parse(reader.result);
 
+                    // 読み込み後初期化処理
+                    loadInit();
+
                     build();
 
                     Utils.fadeMassage("JSONを読み込みました");
@@ -290,16 +297,6 @@ function initEvents(){
 }
 initEvents();
 
-
-/**
- * ビルド引数
- */
-class BuildArguments{
-    static explorer;
-    static noteContainer;
-    static settingContainer;
-}
-
 /**
  * 読み込み
  */
@@ -313,6 +310,50 @@ function load(){
     // header.textContent = "タナカの机";
     header.textContent = "Tanaka's Desk";
 
+    // ロケーションナビ**
+    {
+        const color = {disable: "#8b8b8b", useAble: "#e7e7e7"}
+
+        // 生成
+        const LMNavi =  Utils.createDOM("div","LMNavi-Container",header);
+        const back = Utils.createDOM("svg","icon-svg",LMNavi);
+        const forward = Utils.createDOM("svg","icon-svg",LMNavi);
+        Utils.setStyleProps(LMNavi, {
+            marginLeft: "65%",
+            whiteSpace: "pre-wrap",
+        })
+
+        // 動作
+        back.onclick = ()=> {
+            ShareSpace.LM.goBack();
+            setLMNaviColor();
+        };
+        forward.onclick = ()=> {
+            ShareSpace.LM.goForward()
+            setLMNaviColor();
+        };
+
+        // カラー設定
+        const setLMNaviColor = ()=>{
+            // back
+            if(ShareSpace.LM.goBackAble()){
+                back.innerHTML = Utils.replaceFillColor(Icon.arrowCircle_L, color.useAble);
+            }else{
+                back.innerHTML = Utils.replaceFillColor(Icon.arrowCircle_L, color.disable);
+            }
+            // forward
+            if(ShareSpace.LM.goForwardAble()){
+                forward.innerHTML = Utils.replaceFillColor(Icon.arrowCircle_R, color.useAble);
+            }else{
+                forward.innerHTML = Utils.replaceFillColor(Icon.arrowCircle_R, color.disable);
+            }
+        }
+        setLMNaviColor();
+
+        // シェアスペースに関数を渡す
+        ShareSpace.setLocationButtonStyle = ()=> setLMNaviColor();
+    }
+        
     // メイン
     const main = Utils.createDOM("div","desk-main",desk);
 
@@ -329,9 +370,9 @@ function load(){
     const settingContainer = Utils.createDOM("div","setting",main);
 
     // ビルド引数にDOMを設定
-    BuildArguments.explorer = explorer;
-    BuildArguments.noteContainer = noteContainer;
-    BuildArguments.settingContainer = settingContainer;
+    ShareSpace.explorer = explorer;
+    ShareSpace.noteContainer = noteContainer;
+    ShareSpace.settingContainer = settingContainer;
 
     // データをもとに構築
     DATABASE.loadStorage(false);
@@ -569,9 +610,9 @@ function getChildCSV(obj, returnArr = false){
 function build (){
 
     // エリアクリア
-    BuildArguments.explorer.innerHTML = "";
-    BuildArguments.noteContainer.innerHTML = "";
-    BuildArguments.settingContainer.innerHTML = "";
+    ShareSpace.explorer.innerHTML = "";
+    ShareSpace.noteContainer.innerHTML = "";
+    ShareSpace.settingContainer.innerHTML = "";
 
     // デフォルトデータ最新化
     updateDefaultData();
@@ -586,7 +627,7 @@ function build (){
     for(let obj of DATABASE.dataObj.data){
         
         // 共通
-        let parent = BuildArguments.explorer;
+        let parent = ShareSpace.explorer;
         if(obj.parentId) {
             parent = document.querySelector(`[data-id="${obj.parentId}"]`);
             if(!parent) alert("生成エラー：親要素が見つかりません")
@@ -722,18 +763,18 @@ function build (){
                     Utils.setOnlyStyle(note, "active-note");
 
                     // ロケーション保存
-                    LM.push(obj)
+                    ShareSpace.LM.push(obj)
 
                     // 分岐
                     switch(obj.type){
                         // ノート
                         case DATABASE.types.note:{
-                            new Note(obj.content, BuildArguments.noteContainer, BuildArguments.settingContainer, obj);
+                            new Note(obj.content, ShareSpace.noteContainer, ShareSpace.settingContainer, obj);
                             break;
                         }
                         // アプリ
                         case DATABASE.types.app:{
-                            new App(obj, BuildArguments.noteContainer, BuildArguments.settingContainer, obj);
+                            new App(obj, ShareSpace.noteContainer, ShareSpace.settingContainer, obj);
                             break;
                         }
                     }
@@ -759,20 +800,20 @@ function build (){
                     Utils.setOnlyStyle(note, "active-note");
 
                     // ロケーション保存
-                    LM.push(obj)
+                    ShareSpace.LM.push(obj)
 
                     // 分岐
                     switch(obj.type){
                         // ノート
                         case DATABASE.types.note:{
                             // ノート起動
-                            new Note(obj.content, BuildArguments.noteContainer, BuildArguments.settingContainer, obj);
+                            new Note(obj.content, ShareSpace.noteContainer, ShareSpace.settingContainer, obj);
                             break;
                         }
                         // アプリ
                         case DATABASE.types.app:{
                             // アプリ起動
-                            new App(obj, BuildArguments.noteContainer, BuildArguments.settingContainer, obj);
+                            new App(obj, ShareSpace.noteContainer, ShareSpace.settingContainer, obj);
                             break;
                         }
                     }
@@ -804,4 +845,7 @@ function build (){
         }
     }
     // region データループ終了
+
+    // ロケーション移動ボタン使用可否
+    ShareSpace.setLocationButtonStyle();
 }

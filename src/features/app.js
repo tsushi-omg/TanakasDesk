@@ -55,7 +55,7 @@ class App{
     static getCommonContainer = (pAppName, miniModal = false)=> {
 
         // 親コンテナ（90% x 90%）
-        const root = Utils.createDOM("div", "cmd-root", BuildArguments.noteContainer);
+        const root = Utils.createDOM("div", "cmd-root", ShareSpace.noteContainer);
         if(miniModal){
             root.style.position = "fixed";
             root.style.width = "70%";

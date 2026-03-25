@@ -838,3 +838,44 @@ body{
 .simple-button:hover {
     background:#4c82f5;
 }
+
+/* LMNavi-Container */
+.LMNavi-Container {
+  display: inline-flex;           /* 横並び */
+  align-items: center;            /* 縦中央揃え */
+  gap: 8px;                      /* 要素間のスペース */
+  user-select: none;              /* テキスト選択不可 */
+  cursor: default;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #003366;                 /* 濃い青系 */
+  margin-left: 50%;               /* 親要素に依存 */
+  white-space: pre-wrap;          /* 改行や空白をそのまま表示 */
+}
+
+/* LMNavi-Arrow */
+.LMNavi-Arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 24px;
+  border-radius: 25%;
+  background-color: #e0e0e0;
+  color: #333;
+  font-weight: bold;
+  user-select: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.LMNavi-Arrow:hover {
+  background-color: #b0b0b0;
+}
+
+.icon-svg{
+    cursor: pointer;
+    justify-content: center;
+    align-items: center;
+    display: inline-flex;
+}

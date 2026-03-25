@@ -119,3 +119,15 @@ function updateDefaultData(){
         }
     }
 }
+
+/**
+ * データ読み込み後 初期化処理
+ */
+function loadInit(){
+
+    // ロケーションクリア
+    ShareSpace.LM = new LocationManager();
+
+    // ロケーション移動ボタン使用可否
+    ShareSpace.setLocationButtonStyle();
+}

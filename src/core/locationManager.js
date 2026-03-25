@@ -15,6 +15,46 @@ class LocationManager{
         return this.locationArr.find(a=> a.active == true);
     }
 
+    // 「進む」可否
+    goForwardAble = ()=> {
+        // ロケーション履歴なし
+        if(this.locationArr.length == 0) {
+            return false;
+        }
+
+        // 想定外
+        let activeObj = this.getAciveObj();
+        if(!activeObj) {
+            return false;
+        };
+        
+        // すでに最新ロケーション
+        if(activeObj.number == this.locationArr.length) {
+            return false;
+        }
+        return true;
+    }
+
+    // 「戻る」可否
+    goBackAble = ()=> {
+        // ロケーション履歴なし
+        if(this.locationArr.length == 0) {
+            return false;
+        }
+
+        // 想定外
+        let activeObj = this.getAciveObj();
+        if(!activeObj) {
+            return false;
+        };
+        
+        // すでに最古ロケーション
+        if(activeObj.number == 1) {
+            return false;
+        }
+        return true;
+    }
+
     // -------------------
     // ロケーション追加
     // -------------------
@@ -50,6 +90,9 @@ class LocationManager{
             active: true,
         })
 
+        // ロケーション移動ボタン使用可否
+        ShareSpace.setLocationButtonStyle();
+
         // // 再採番
         // this.locationArr.sort((a,b)=> a.number - b.number);// 昇順
         // let newNumber = 1;
@@ -63,7 +106,7 @@ class LocationManager{
     // 進む
     // -------------------
     goForward = ()=> {
-        
+
         // ロケーション履歴なし
         if(this.locationArr.length == 0) {
             Utils.fadeMassage("ロケーション履歴はありません");
@@ -74,6 +117,7 @@ class LocationManager{
         let activeObj = this.getAciveObj();
         if(!activeObj) {
             Utils.fadeMassage("エラー：アクティブなロケーションが見当たりません")
+            return;
         };
         
         // すでに最新ロケーション
@@ -112,6 +156,7 @@ class LocationManager{
         let activeObj = this.getAciveObj();
         if(!activeObj) {
             Utils.fadeMassage("エラー：アクティブなロケーションが見当たりません")
+            return;
         };
         
         // すでに最古ロケーション
@@ -137,8 +182,8 @@ class LocationManager{
     }
 }
 
-// 公開クラス
-const LM = new LocationManager();
+// システム共通クラス
+ShareSpace.LM = new LocationManager();
 
 /**
  * documentイベント付与
@@ -147,11 +192,11 @@ document.addEventListener("mousedown", e=> {
     // 戻る
     if(e.button == 3){
         e.preventDefault();
-        LM.goBack();
+        ShareSpace.LM.goBack();
     }
     // 進む
     if(e.button == 4){
         e.preventDefault();
-        LM.goForward();
+        ShareSpace.LM.goForward();
     }
 })
