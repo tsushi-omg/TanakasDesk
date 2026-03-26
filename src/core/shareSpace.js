@@ -1,6 +1,6 @@
 
 /**
- * 共通アクセス領域（パブリック変数の宣言用途。グローバル汚染防止）
+ * グローバル領域（汚染防止）
  */
 class ShareSpace{
     
@@ -9,7 +9,7 @@ class ShareSpace{
     //=======================
     // エクスプローラー
     static explorer;
-    // ファイルコンテナ
+    // ファイルアクションコンテナ
     static noteContainer;
     // 設定コンテナ
     static settingContainer;

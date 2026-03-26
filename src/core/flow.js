@@ -302,12 +302,16 @@ initEvents();
  */
 function load(){
 
+    // ページ履歴の上書き（戻るボタンでブラウザバックされるのを回避）
+    try{
+        history.replaceState(null, "", location.href);
+    }catch(e){Utils.fadeMassage("ページ履歴の上書きはブロックされました")};
+
     // 机（最親）
     const desk = Utils.createDOM("div","desk",document.body);
 
     // タイトル
     const header = Utils.createDOM("div","desk-header",desk);
-    // header.textContent = "タナカの机";
     header.textContent = "Tanaka's Desk";
 
     // ロケーションナビ**

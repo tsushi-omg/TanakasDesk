@@ -121,7 +121,7 @@ function updateDefaultData(){
 }
 
 /**
- * データ読み込み後 初期化処理
+// region データ読み込み後 初期化処理
  */
 function loadInit(){
 
@@ -131,3 +131,5 @@ function loadInit(){
     // ロケーション移動ボタン使用可否
     ShareSpace.setLocationButtonStyle();
 }
+
+

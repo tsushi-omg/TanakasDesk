@@ -51,20 +51,25 @@ class App{
 
     /**
      * アプリケーション共通コンテナ作成
+     * @param {String} pAppName タイトルバー表示名
+     * @param {Boolean} miniMode ミニモードフラグ
      */
-    static getCommonContainer = (pAppName, miniModal = false)=> {
+    static getCommonContainer = (pAppName, miniMode = false)=> {
 
         // 親コンテナ（90% x 90%）
         const root = Utils.createDOM("div", "cmd-root", ShareSpace.noteContainer);
-        if(miniModal){
+        if(miniMode){
             root.style.position = "fixed";
             root.style.width = "70%";
             root.style.height = "90%";
             root.style.zIndex = 10;
         }
 
-        // ミニモーダルなら外部クリックで削除
-        if(miniModal){
+        // 透明モーダル削除関数
+        let delModal; 
+
+        // ミニモードなら外部クリックで削除
+        if(miniMode){
             const modal = Utils.createDOM("div", "", document.body);
             Utils.setStyleProps(modal, {
                 position: "absolute",
@@ -79,6 +84,7 @@ class App{
                 modal.remove();
                 root.remove();
             }
+            delModal = ()=> { if(miniMode) modal.remove(); };
         }
 
         // ウィンドウ本体
@@ -90,29 +96,22 @@ class App{
 
         // ボタン（最小化・最大化・閉じる）
         const controls = Utils.createDOM("div", "cmd-controls", titleBar);
-        // const smallButton = Utils.createDOM("div", "cmd-btn", controls, "ー");
-        // smallButton.innerHTML = Utils.replaceFillColor(Icon.simpleLine, "#ffffff");
-        // const bigButon = Utils.createDOM("div", "cmd-btn", controls, "□");
-        // bigButon.innerHTML = Utils.replaceFillColor(Icon.square, "#ffffff");
         const closeBtn =  Utils.createDOM("div", "cmd-btn,close", controls, "×");
         closeBtn.innerHTML = Utils.replaceFillColor(Icon.close, "#ffffff");
-        closeBtn.onclick = ()=> {root.remove();};
+        closeBtn.onclick = ()=> {
+            root.remove();
+            if(delModal) delModal();
+        };
 
         // コンテンツ（黒画面）
         const content = Utils.createDOM("div", "cmd-content", windowEl);
-
-        // 中身（それっぽく）
-        // Utils.createDOM("div", "cmd-line", content, "Microsoft Windows [Version 10.0.19045.6466]");
-        // Utils.createDOM("div", "cmd-line", content, "(c) Microsoft Corporation. All rights reserved.");
-        // Utils.createDOM("div", "cmd-line", content, "");
-        // Utils.createDOM("div", "cmd-line", content, "C:\\Users\\User>");
 
         return content;
     }
 
     /**
      * UI構築
-     * @param {*} configOption 
+     * @param {Object} configOption 
      */
     create = (configOption = null)=> {
 
@@ -140,11 +139,6 @@ class App{
                 config[keyName] = configOption[keyName];
             }
         }
-
-        // // 空なら初期データ挿入
-        // if(Object.keys(this.dataObj).length == 0){
-        //     Object.assign(this.dataObj, this.getInitialData())
-        // }
         
         // メッセージ表示関数
         const showMassage = (text)=> {

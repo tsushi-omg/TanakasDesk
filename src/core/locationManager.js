@@ -193,10 +193,12 @@ document.addEventListener("mousedown", e=> {
     if(e.button == 3){
         e.preventDefault();
         ShareSpace.LM.goBack();
+        ShareSpace.setLocationButtonStyle();
     }
     // 進む
     if(e.button == 4){
         e.preventDefault();
         ShareSpace.LM.goForward();
+        ShareSpace.setLocationButtonStyle();
     }
 })
