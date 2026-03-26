@@ -337,9 +337,17 @@ class Note {
                 /**
                  * ドロップで文字色変更（見た目）
                  */
-                box.addEventListener("dragover",(e)=>e.preventDefault());
+                box.addEventListener("dragover",(e)=>{
+                    e.preventDefault();
+                    box.classList.add("dragover-explorer");
+                });
+                box.addEventListener("dragleave",(e)=>{
+                    e.preventDefault();
+                    box.classList.remove("dragover-explorer");
+                });
 
                 box.addEventListener("drop",(e)=>{
+                    box.classList.remove("dragover-explorer");
                     // 同一キーで取り出し
                     const color = e.dataTransfer.getData("textColor");
                     if(!color) return;

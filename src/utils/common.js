@@ -610,6 +610,8 @@ class Binder{
      */
     static bindRangeSelection = (cssClassName, callbackObj={callback: null, eventName: ""})=>{
         const arr = document.querySelectorAll("." + cssClassName);
+        // 一つしか選択されていない状態
+        let singleSelection = true;
         for(let el of arr){
             // 選択
             el.addEventListener("mouseenter", e=>{
@@ -618,15 +620,20 @@ class Binder{
                 // ２つ以上のみ複数選択のスタイルとする
                 // NodeListを配列に変換
                 // データセットは文字列しか格納できないためbool変換
-                const currSelections = Array.from(arr).filter(a=> a.dataset.selected=="true");
-                if(currSelections.length < 2){
-                    currSelections.forEach(a=> {
-                        a.classList.remove("selected");
-                    })
+                if(singleSelection){
+                    const currSelections = Array.from(arr).filter(a=> a.dataset.selected=="true");
+                    if(currSelections.length < 2){
+                        currSelections.forEach(a=> {
+                            a.classList.remove("selected");
+                        })
+                    }else{
+                        currSelections.forEach(a=> {
+                            a.classList.add("selected");
+                            singleSelection = false;
+                        })
+                    }
                 }else{
-                    currSelections.forEach(a=> {
-                        a.classList.add("selected");
-                    })
+                    el.classList.add("selected");
                 }
             })
             // 解除
@@ -638,13 +645,18 @@ class Binder{
                 // 自分を選択
                 el.dataset.selected = true;
             })
-            // マウスダウンフラグ
+            // フラグ
             el.addEventListener("mouseup", e=>{
                 Utils.mouseDowning = false;
+                singleSelection = true;
             })
             // コールバック
             if(callbackObj.eventName){
-                el.addEventListener(callbackObj.eventName, e=>{
+                // el.addEventListener(callbackObj.eventName, e=>{
+                el.addEventListener("mouseup", e=>{
+                    // 隙間の補完
+                    // const selectedArr = Utils.getSelectedElements(cssClassName);
+                    // selectedArr.forEach(tmp=> tmp.classList.add("selected"));
                     // 複数選択後、コールバック
                     if(callbackObj.callback){
                         const currSelections = Array.from(arr).filter(a=> a.dataset.selected=="true");
