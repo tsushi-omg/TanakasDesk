@@ -1001,3 +1001,22 @@ body{
     transition: all 0.15s ease;
     background-color: #deeaf3;
 }
+
+/* icon-span クラスの基本スタイル */
+.icon-span {
+    display: inline-flex;          /* アイコンをテキストと一緒に縦横揃え */
+    align-items: center;           /* 垂直方向の中央揃え */
+    justify-content: center;       /* 水平方向の中央揃え */
+    width: 20px;                   /* アイコンの幅 */
+    height: 20px;                  /* アイコンの高さ */
+    margin-right: 6px;             /* ボタン内テキストとの間隔 */
+    flex-shrink: 0;                /* アイコンが縮まないようにする */
+    vertical-align: middle;        /* テキストと揃える */
+}
+
+/* SVGなどを使う場合の塗り色調整 */
+.icon-span svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;            /* 親のcolorを引き継ぐ */
+}

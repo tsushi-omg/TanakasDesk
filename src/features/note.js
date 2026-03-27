@@ -828,6 +828,13 @@ class Note {
 
             // ページ追加ボタン
             const addPageBtn = Utils.createDOM("button", "addPageBtn", settingPanel, "ページ追加");
+            // {
+            //     // アイコン
+            //     const addIcon = Utils.createDOM("span", "icon-span");
+            //     addIcon.innerHTML = Icon.addCircle;
+            //     addIcon.style.color = "#4b4b4b";
+            //     addPageBtn.prepend(addIcon);
+            // }
             Utils.setStyleProps(addPageBtn, {marginTop: "20px"},)
             addPageBtn.onclick = ()=> {
                 this.addPage(this.dataObj, 1);
@@ -837,6 +844,13 @@ class Note {
 
             // テンプレート作成ボタン
             const createTemplateBtn = Utils.createDOM("button", "addPageBtn", settingPanel, "テンプレートを作成");
+            // {
+            //     // アイコン
+            //     const editIcon = Utils.createDOM("span", "icon-span");
+            //     editIcon.innerHTML = Icon.edit;
+            //     editIcon.style.color = "#4b4b4b";
+            //     createTemplateBtn.prepend(editIcon);
+            // }
             createTemplateBtn.onclick = async ()=> {
                 // ソースページを選択
                 const selectedPageId = await this.selTemplate(createdPageIDArr, createdPageArr, "ソースを選択してください");
@@ -851,6 +865,13 @@ class Note {
 
             // テンプレート適用ボタン
             const loadTemplateBtn = Utils.createDOM("button", "addPageBtn", settingPanel, "テンプレートを適用");
+            // {
+            //     // アイコン
+            //     const pushIcon = Utils.createDOM("span", "icon-span");
+            //     pushIcon.innerHTML = Icon.pushTransition;
+            //     pushIcon.style.color = "#4b4b4b";
+            //     loadTemplateBtn.prepend(pushIcon);
+            // }
             loadTemplateBtn.onclick = async ()=> {
                 // 適用対象を選択
                 const targetPageId = await this.selTemplate(createdPageIDArr, createdPageArr, "適用先のページを選択してください");
