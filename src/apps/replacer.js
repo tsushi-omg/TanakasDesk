@@ -158,6 +158,9 @@ async function replacerApp() {
     // 実行アクション
     exeButton.addEventListener("click", ()=> {
 
+        // 入力中ボックスのonchange発火
+        exeButton.focus();
+
         // From n To入力配列
         const fromArr = fromBox.value.split(config.sep);
         const toArr = toBox.value.split(config.sep);

@@ -95,6 +95,125 @@ class Note {
         //
     }
 
+    /**
+     * テンプレート作成元選択
+     * @param {String[]} pageIdArr ページID配列
+     * @param {HTMLElement[]} pageDOMArr ページDOM配列（ハイライト用, インデックス = ページ番号想定）
+     * @param {String} pMsg
+     * @returns 
+     */
+    selTemplate = (pageIdArr, pageDOMArr, pMsg)=> {
+        // 選択を待つ
+        return new Promise(resolve =>{
+
+            // 選択メニュー作成
+            const container = Utils.createDOM("div", "selectTemplate-container", document.body);
+            Utils.setStyleProps(Utils.createDOM("div", "cc-message", container, pMsg), {
+                marginTop: "10px"
+            });
+            const flexContainer = Utils.createDOM("div", "selectTemplate-list", container);
+
+            // レイヤー
+            const layer = Utils.createDOM("div", "custom-confirm-layer", document.body);
+            layer.onclick = ()=> {
+                end("");
+            }
+
+            // マウス位置へ
+            container.style.left = Utils.mouseX - 350 + "px";
+            container.style.top = Utils.mouseY + "px";
+
+            // 閉じる**
+            const end = (value)=> {
+                // モーダル削除 & resolve
+                layer.remove();
+                container.remove();
+                resolve(value);
+                // ハイライト削除
+                Utils.removeCSS("selectTemplate-pageHilight");
+            }
+            
+            // ページループ
+            let count = -1;
+            for(let pageId of pageIdArr){
+                count++;
+                // インデックス穴埋め分
+                if(pageId == "") continue;
+                // ページクローン
+                const pageClone = Utils.createDOM("div", "selectTemplate-pageClone", flexContainer, count);
+                Utils.setStyleProps(pageClone, {
+                    margin: "10px"
+                })
+                pageClone.onclick = ()=> {
+                    end(pageId);
+                }
+                // 参照ページDOM
+                const refPage = pageDOMArr[count];
+                // 参照ページハイライト
+                pageClone.onmouseenter = ()=> {
+                    refPage.classList.add("selectTemplate-pageHilight");
+                }
+                pageClone.onmouseleave = ()=> {
+                    refPage.classList.remove("selectTemplate-pageHilight");
+                }
+            }
+        })
+    }
+
+    // ---------------------------------------------------------
+    // テンプレートを保存（contentをそのままディープコピー）
+    // ---------------------------------------------------------
+    creTemplate = async (basePageId)=> {
+        // テンプレート名
+        const newName = await Utils.prompt("テンプレート名を入力してください");
+        if(!newName || !newName.trim()){
+            Utils.fadeMassage("中止しました");
+            return;
+        }
+        // 対象ページ取得
+        const basePageObj = this.dataObj.data.find(a=> a.pageId == basePageId);
+        
+        // メタデータ作成
+        DATABASE.dataObj.meta.noteTemplate.push({
+            name: newName,
+            rows: JSON.parse(JSON.stringify(basePageObj.rows)),
+            createdAt: Utils.getNow()
+        })
+        Utils.fadeMassage("テンプレートを作成しました")
+    }
+
+    // ---------------------------------------------------------
+    // テンプレート適用
+    // ---------------------------------------------------------
+    attachTemplate = async (targetPageId, config = null)=> {
+        
+        // テンプレートなし
+        if(DATABASE.dataObj.meta.noteTemplate.length == 0){
+            Utils.fadeMassage("テンプレートがありません");
+            return;
+        }
+
+        // テンプレート一覧からソースを取得
+        let order = [];
+        for(let metaObj of DATABASE.dataObj.meta.noteTemplate){
+            order.push({ printName: metaObj.name + `（${metaObj.createdAt}）`, icon: Icon.copy, func: ()=> attach(metaObj) });
+        }
+        Utils.createMenu(order, true);
+
+        // 適用関数
+        const attach = async (baseObj)=> {
+            if(! await Utils.confirm("現在の編集は失われます。続行しますか？")) {
+                Utils.fadeMassage("中止しました")
+                return;
+            }
+            // 実行
+            const targetObj = this.dataObj.data.find(a=> a.pageId == targetPageId);
+            targetObj.rows = baseObj.rows;
+            this.create(config);
+            Utils.fadeMassage("テンプレートを適用しました")
+        }
+    }
+
     // -----------------
     // プロパティ初期化
     // -----------------
@@ -107,7 +226,7 @@ class Note {
     // -----------------
     // UI構築
     // -----------------
-    create = (configOption = null)=> {
+    create = async (configOption = null)=> {
 
         // クリア
         this.parentElement.innerHTML = "";
@@ -223,17 +342,32 @@ class Note {
                 const diff = parseInt(prevMouseX) - parseInt(Utils.mouseX);
                 const bigSwipe = Math.abs(diff) > bigPx;
                 const biggestSwipe = Math.abs(diff) > biggestPx;
-                const goNext = diff < 0;
+                // const goNext = diff < 0;
+                const goNext = diff >= 0;
+
                 // アイコン変化
+                // if(Math.abs(diff) < smallPx) el.innerHTML = ""
+                // else if(goNext){
+                //     if(biggestSwipe) el.innerHTML = Icon.repagePointer_biggest;
+                //     // else if(bigSwipe) el.innerHTML = Icon.repagePointer_big;
+                //     else el.innerHTML = Icon.repagePointer;
+                // }else{
+                //     if(biggestSwipe) el.innerHTML = Icon.repagePointer_left_biggest;
+                //     // else if(bigSwipe) el.innerHTML = Icon.repagePointer_left_big;
+                //     else el.innerHTML = Icon.repagePointer_left;
+                // }
+
+                // ハンド
                 if(Math.abs(diff) < smallPx) el.innerHTML = ""
+                if(biggestSwipe) el.innerHTML = Utils.replaceFillColor(Icon.hand, "#4ebef1")
+                else el.innerHTML = Icon.hand;
+
+                // ページめくり風
+                if(Math.abs(diff) < smallPx) Utils.removeCSS("repaging");
                 else if(goNext){
-                    if(biggestSwipe) el.innerHTML = Icon.repagePointer_biggest;
-                    // else if(bigSwipe) el.innerHTML = Icon.repagePointer_big;
-                    else el.innerHTML = Icon.repagePointer;
+                    Utils.setOnlyStyle(createdPageArr[config.visiblePages], "repaging")
                 }else{
-                    if(biggestSwipe) el.innerHTML = Icon.repagePointer_left_biggest;
-                    // else if(bigSwipe) el.innerHTML = Icon.repagePointer_left_big;
-                    else el.innerHTML = Icon.repagePointer_left;
+                    Utils.setOnlyStyle(createdPageArr[1], "repaging")
                 }
             }
             
@@ -244,13 +378,16 @@ class Note {
                 Utils.getDOM("repagePointer").remove();
                 Utils.getDOM("repagePointer_start").remove();
                 document.removeEventListener("mousemove", handler)
+                // ページめくり風remove
+                Utils.removeCSS("repaging");
                 // 移動幅
                 let diff = parseInt(prevMouseX) - parseInt(Utils.mouseX);
                 if(Math.abs(diff) > smallPx){
                     // 
                     const bigSwipe = Math.abs(diff) > bigPx;
                     const biggestSwipe = Math.abs(diff) > biggestPx;
-                    const goNext = diff < 0;
+                    // const goNext = diff < 0;
+                    const goNext = diff >= 0;
                     // range
                     // 通常スワイプ
                     const range = {prev:config.visiblePages, next:config.visiblePages};
@@ -303,6 +440,9 @@ class Note {
         //
         // 生成済みページ数
         let createdPageCnt = 0;
+        // ページDOM挿入（ページ数同期）
+        let createdPageArr = [null];
+        let createdPageIDArr = [""];
         //
         // region page
         //
@@ -311,6 +451,8 @@ class Note {
         for(let pageObj of pageObjArr){
             //
             const page = Utils.createDOM("div", "page", note);
+            createdPageArr.push(page);
+            createdPageIDArr.push(pageObj.pageId);
             //
             // region row
             //
@@ -630,15 +772,6 @@ class Note {
             pageMoveNext.addEventListener("click", () => goNextPage());
             pageMovePrev.addEventListener("click", () => goPrevPage());
 
-            // ページ追加ボタン
-            const addPageBtn = Utils.createDOM("button", "addPageBtn", settingPanel);
-            addPageBtn.textContent = "ページ追加";
-            addPageBtn.onclick = ()=> {
-                this.addPage(this.dataObj, 1);
-                config.pageStartAt++;
-                this.create(config);
-            }
-
             // ショートカット説明
             const shortcutArea = Utils.createDOM("div", "shortcutArea", settingPanel);
 
@@ -692,6 +825,43 @@ class Note {
                 });
 
             });
+
+            // ページ追加ボタン
+            const addPageBtn = Utils.createDOM("button", "addPageBtn", settingPanel, "ページ追加");
+            Utils.setStyleProps(addPageBtn, {marginTop: "20px"},)
+            addPageBtn.onclick = ()=> {
+                this.addPage(this.dataObj, 1);
+                config.pageStartAt++;
+                this.create(config);
+            }
+
+            // テンプレート作成ボタン
+            const createTemplateBtn = Utils.createDOM("button", "addPageBtn", settingPanel, "テンプレートを作成");
+            createTemplateBtn.onclick = async ()=> {
+                // ソースページを選択
+                const selectedPageId = await this.selTemplate(createdPageIDArr, createdPageArr, "ソースを選択してください");
+                // 選択なし
+                if(!selectedPageId) {
+                    Utils.fadeMassage("中止しました")
+                    return;
+                }
+                // テンプレート作成
+                this.creTemplate(selectedPageId);
+            }
+
+            // テンプレート適用ボタン
+            const loadTemplateBtn = Utils.createDOM("button", "addPageBtn", settingPanel, "テンプレートを適用");
+            loadTemplateBtn.onclick = async ()=> {
+                // 適用対象を選択
+                const targetPageId = await this.selTemplate(createdPageIDArr, createdPageArr, "適用先のページを選択してください");
+                // 選択なし
+                if(!targetPageId) {
+                    Utils.fadeMassage("中止しました")
+                    return;
+                }
+                // テンプレート適用
+                this.attachTemplate(targetPageId, config);
+            }
         }
         // 設定パネル作成
         createSettingPanel();

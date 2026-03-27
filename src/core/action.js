@@ -133,3 +133,20 @@ function loadInit(){
 }
 
 
+
+/**
+// region 既存データパッチ
+ */
+function applyPatch(){
+    //------------------
+    // 2026/03/27
+    // メタデータ領域
+    //------------------
+    if(!DATABASE.dataObj.hasOwnProperty("meta")){
+        DATABASE.dataObj.meta = 
+        {
+            // ノートテンプレート
+            noteTemplate: [],
+        };
+    }
+}

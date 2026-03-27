@@ -108,7 +108,11 @@ class DATABASE{
             this.defaultData.DefaultAppsFolder,
             this.defaultData.DefaultAppsReplacer,
         ],
-        config: {}
+        config: {},
+        meta: {
+            // ノートテンプレート情報
+            noteTemplate: []
+        }
     };
 
     //
@@ -617,6 +621,9 @@ function build (){
     ShareSpace.explorer.innerHTML = "";
     ShareSpace.noteContainer.innerHTML = "";
     ShareSpace.settingContainer.innerHTML = "";
+
+    // 既存データパッチ
+    applyPatch();
 
     // デフォルトデータ最新化
     updateDefaultData();
