@@ -4,7 +4,7 @@
 class Binder{
 
     // ドラッグ機能
-    static bindDrag(pEl, obj = null){
+    static bindDrag(pEl, obj = null, nomoveX = false){
         let offsetX, offsetY, isDown=false;
         let scale = obj ? obj.scale : 1;
 
@@ -22,7 +22,7 @@ class Binder{
             if(!isDown) return;
 
             const rect = pEl.parentElement.getBoundingClientRect();
-            pEl.style.left = (e.clientX - rect.left)/scale - offsetX + "px";
+            if(!nomoveX) pEl.style.left = (e.clientX - rect.left)/scale - offsetX + "px";
             pEl.style.top  = (e.clientY - rect.top)/scale  - offsetY + "px";
         });
 

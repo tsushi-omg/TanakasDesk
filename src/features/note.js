@@ -13,18 +13,18 @@ class Note {
     /**
      * コンストラクタ
      */
-    constructor(pObj, pParent, pSettingParent, noteObj){
+    constructor(noteObj){
         //
-        this.dataObj = pObj;
+        this.dataObj = noteObj.content;
         //
-        this.parentElement = pParent;
-        this.settingParentElement = pSettingParent;
+        this.parentElement = ShareSpace.noteContainer;
+        this.settingParentElement = ShareSpace.settingContainer;
         //
         let config = {massage: noteObj.name};
         // 読み取り専用ノートの場合
         if(noteObj.readOnly){
             // 参照を切る
-            this.dataObj = JSON.parse(JSON.stringify(pObj));
+            this.dataObj = JSON.parse(JSON.stringify(this.dataObj));
             // メッセージ加工
             config.massage += "（読み取り専用）";
         }
@@ -49,7 +49,9 @@ class Note {
         //
         let initialObj = {
             data: [],
-            meta: {},
+            meta: {
+                stickyNotes: [],
+            },
         }
         this.addPage(initialObj, 10);
         //
@@ -74,7 +76,7 @@ class Note {
                     pageNo: pageIdx,
                     createdAt: JSON.stringify(today),
                     updatedAt: JSON.stringify(today),
-                    rows: []
+                    rows: [],
                 }
             )
             //
@@ -313,6 +315,7 @@ class Note {
             note.addEventListener("mousedown", e=> {
                 // 右クリック長押し → 左右スワイプでページめくり
                 if(e.button !== 2) return;
+                if(e.target.dataset.type == "sticky") return;
                 prevMouseX = Utils.mouseX;
                 //
                 if(Utils.getDOM("repagePointer")) Utils.getDOM("repagePointer").remove();
@@ -322,6 +325,7 @@ class Note {
                 const startPoint = Utils.createDOM("div", "", document.body);
                 startPoint.style.position = "absolute";
                 startPoint.id = "repagePointer_start";
+                startPoint.style.zIndex = 15;
                 startPoint.style.left = Utils.mouseX + "px";
                 startPoint.style.top = Utils.mouseY + "px";
                 startPoint.innerHTML = Icon.repagePointer_origin;
@@ -329,6 +333,7 @@ class Note {
                 const repagePointer = Utils.createDOM("div", "", document.body);
                 repagePointer.style.position = "absolute";
                 repagePointer.id = "repagePointer";
+                repagePointer.style.zIndex = 15;
                 repagePointer.addEventListener("contextmenu", e=> ( e.preventDefault() ));
                 handler = ()=> moveWithMouse(repagePointer);
                 document.addEventListener("mousemove", handler)
@@ -481,35 +486,100 @@ class Note {
                  */
                 box.addEventListener("dragover",(e)=>{
                     e.preventDefault();
-                    box.classList.add("dragover-explorer");
+                    // 文字色
+                    if(ShareSpace.draggingDataKey == "textColor"){
+                        box.classList.add("dragover-explorer");
+                    }
+                    // 付箋
+                    if(ShareSpace.draggingDataKey == "stickyNote"){
+                        page.classList.add("selectTemplate-pageHilight");
+                    }
                 });
                 box.addEventListener("dragleave",(e)=>{
                     e.preventDefault();
-                    box.classList.remove("dragover-explorer");
-                });
-
-                box.addEventListener("drop",(e)=>{
-                    box.classList.remove("dragover-explorer");
-                    // 同一キーで取り出し
-                    const color = e.dataTransfer.getData("textColor");
-                    if(!color) return;
-                    const selectedArr = Utils.getSelectedElements("rowInput");
-                    // 範囲選択アリ
-                    if(selectedArr.length >= 2){
-                        selectedArr.forEach(el=>{
-                            el.style.color = color;
-                            // 更新
-                            let workObj = this.dataObj.data.find(a=> a.pageId == el.dataset.pageId).rows
-                                                .find(b=> b.rowId == el.dataset.rowId);
-                            workObj.style.color = color;
-                        })
-                    }else{
-                        // 範囲選択なし
-                        box.style.color = color;
-                        // 更新
-                        rowObj.style.color = color;
+                    // 文字色
+                    if(ShareSpace.draggingDataKey == "textColor"){
+                        box.classList.remove("dragover-explorer");
+                    }
+                    // 付箋
+                    if(ShareSpace.draggingDataKey == "stickyNote"){
+                        page.classList.remove("selectTemplate-pageHilight");
                     }
                 });
+
+                /**------------------------------------
+                 * ドロップイベント
+                 *------------------------------------*/
+                box.addEventListener("drop",(e)=>{
+                    /**
+                     * color：文字色
+                    */
+                   const color = e.dataTransfer.getData("textColor");
+                   if(color){
+                        box.classList.remove("dragover-explorer");
+                        const selectedArr = Utils.getSelectedElements("rowInput");
+                        // 範囲選択アリ
+                        if(selectedArr.length >= 2){
+                            selectedArr.forEach(el=>{
+                                el.style.color = color;
+                                // 更新
+                                let workObj = this.dataObj.data.find(a=> a.pageId == el.dataset.pageId).rows
+                                                    .find(b=> b.rowId == el.dataset.rowId);
+                                workObj.style.color = color;
+                            })
+                        }else{
+                            // 範囲選択なし
+                            box.style.color = color;
+                            // 更新
+                            rowObj.style.color = color;
+                        }
+                    }
+                    /**
+                     * stickyNote：付箋
+                     */
+                    const stickyNote = e.dataTransfer.getData("stickyNote");
+                    if (stickyNote) {
+                        // dragoverスタイルremove
+                        page.classList.remove("selectTemplate-pageHilight");
+
+                        // ページ左右区分
+                        let RL = "L";
+                        if(pageObj.pageId == createdPageIDArr[config.visiblePages]){
+                            RL = "R";
+                        }
+
+                        // ドロップ位置取得（page基準）
+                        const rect = page.getBoundingClientRect();
+                        const y = e.clientY - rect.top;
+
+                        // データ作成
+                        let newStickyObj = {
+                            bcolor: stickyNote,
+                            y: y,
+                            // 左右区分
+                            RL: RL,
+                            // 見開き２ページ分のカンマ区切りを見開きキーとする
+                            facingPageKey: createdPageIDArr.join(","),
+                            pageStartAt: config.pageStartAt,
+                            stickyId: Utils.getRandomString20(this.dataObj.meta.stickyNotes),
+                        };
+                        this.dataObj.meta.stickyNotes.push(newStickyObj)
+
+                        // 付箋作成
+                        createSticky(newStickyObj, page);
+
+                        // // 簡易編集（クリックで編集）
+                        // sticky.addEventListener("dblclick", () => {
+                        //     sticky.contentEditable = true;
+                        //     sticky.focus();
+                        // });
+
+                        // sticky.addEventListener("blur", () => {
+                        //     sticky.contentEditable = false;
+                        // });
+                    }
+                });
+                // drop end----------------
                 /**
                  * ペースト
                  */
@@ -565,26 +635,26 @@ class Note {
                         e.preventDefault();
                         goPrevPage();
                     } 
-                    // 表示数＋＋（alt ↑）
-                    if(e.key == "ArrowUp" && e.altKey){
-                        if(config.visiblePages == 4){
-                            showMassage("最大表示数に到達");
-                            return;
-                        }
-                        config.visiblePages++;
-                        config.massage = "表示数を" + config.visiblePages + "枚に変更";
-                        this.create(config);
-                    }
-                    // 表示数ーー（alt ↓）
-                    if(e.key == "ArrowDown" && e.altKey){
-                        if(config.visiblePages == 1){
-                            showMassage("最小表示数に到達");
-                            return;
-                        }
-                        config.visiblePages--;
-                        config.massage = "表示数を" + config.visiblePages + "枚に変更";
-                        this.create(config);
-                    } 
+                    // // 表示数++（alt ↑）
+                    // if(e.key == "ArrowUp" && e.altKey){
+                    //     if(config.visiblePages == 4){
+                    //         showMassage("最大表示数に到達");
+                    //         return;
+                    //     }
+                    //     config.visiblePages++;
+                    //     config.massage = "表示数を" + config.visiblePages + "枚に変更";
+                    //     this.create(config);
+                    // }
+                    // // 表示数--（alt ↓）
+                    // if(e.key == "ArrowDown" && e.altKey){
+                    //     if(config.visiblePages == 1){
+                    //         showMassage("最小表示数に到達");
+                    //         return;
+                    //     }
+                    //     config.visiblePages--;
+                    //     config.massage = "表示数を" + config.visiblePages + "枚に変更";
+                    //     this.create(config);
+                    // } 
                     // Tab挿入
                     if (e.key === "Tab") {
                         e.preventDefault();
@@ -604,18 +674,108 @@ class Note {
                 //
                 box.onchange = ()=> rowObj.value = box.value;
             }
-            //
+            // row loop end...
+            
+            // ページ番号表記
             const pageLabel = Utils.createDOM("div", "pageLabel", page);
             pageLabel.innerHTML = "ページ " + pageObj.pageNo + " / " + this.dataObj.data.length;
-            //
-            /**
-             * ページイベント
-             */
-            //
+
+            // 最大表示数到達
             createdPageCnt++;
             if(createdPageCnt == config.visiblePages) break;
         }
         // region Page End
+
+        /**
+         * 付箋生成関数
+         * @param {*} stickyObj 付箋オブジェクト 
+         * @param {*} pageDOM ページDOM
+         * @param {*} isFacing 現在の見開きページかどうか
+         * @returns 
+         */
+        const createSticky = (stickyObj, pageDOM, isFacing = true)=> {
+            // 生成
+            const sticky = Utils.createDOM(
+                "div",
+                "stickyNote",
+                pageDOM
+            );
+
+            // 見た目
+            sticky.style.backgroundColor = stickyObj.bcolor;
+            sticky.dataset.type = "sticky"
+
+            // 位置
+            sticky.style.top = `${stickyObj.y}px`;
+
+            // left固定**
+            // 右ページ or 先のページ
+            if(pageDOM == createdPageArr[2]){
+                const cs = window.getComputedStyle(pageDOM);
+                sticky.style.left = parseInt(cs.left) + parseInt(cs.width) -20 + "px";
+            // 左ページ or 前のページ
+            }else{
+                const cs = window.getComputedStyle(pageDOM);
+                sticky.style.left = parseInt(cs.left) -50 + "px";
+            }
+
+            // 現在の見開きページでない場合
+            if(!isFacing){
+                // 背面に表示
+                sticky.style.zIndex = -1;
+                // クリックで対象ページを開く
+                sticky.onclick = ()=> {
+                    config.pageStartAt = stickyObj.pageStartAt;
+                    setRepageMassage();
+                    this.create(config);
+                }
+            // 現在の見開きページである場合
+            }else{
+                // ドラッグ移動可能
+                Binder.bindDrag(sticky, null, true)
+                // 削除
+                sticky.addEventListener("contextmenu", e=>{
+                    e.preventDefault();
+                    let order = [
+                        { printName: "削除", icon: Icon.tmpGarbage, func: ()=> deleteSticky() },
+                    ];
+                    Utils.createMenu(order, true);
+                })
+                // 削除関数
+                const deleteSticky = ()=> {
+                    sticky.remove();
+                    this.dataObj.meta.stickyNotes = this.dataObj.meta.stickyNotes.filter(a => a.stickyId != stickyObj.stickyId);
+                    Utils.fadeMassage("削除しました")
+                }
+                
+            }
+
+            // 位置更新
+            if(isFacing){
+                const rect = pageDOM.getBoundingClientRect();
+                sticky.addEventListener("mouseup", (mouseupEvent) => {
+                    stickyObj.y = mouseupEvent.clientY - rect.top;
+                });
+            }
+            return sticky;
+        }
+
+        /**
+         * 付箋復元
+         */
+        for(let workObj of this.dataObj.meta.stickyNotes){
+            // 現在の見開きページであるか
+            let isFacing = (workObj.facingPageKey == createdPageIDArr.join(","));
+            // 現在の見開きより先のページであるか
+            let isForward = (workObj.pageStartAt > config.pageStartAt);
+            // 生成先
+            let parentPage = (workObj.RL == "R") ? createdPageArr[2] : createdPageArr[1];
+            // 再生成時
+            if(!isFacing){
+                parentPage = isForward ? createdPageArr[2] : createdPageArr[1];
+            }
+            createSticky(workObj, parentPage, isFacing);
+        }
 
         /**
         // region 範囲選択
@@ -718,37 +878,37 @@ class Note {
             panelTitle.textContent = "設定";
 
             // 表示ページ数エリア
-            const pageCountArea = Utils.createDOM("div", "settingItem", settingPanel);
+            // const pageCountArea = Utils.createDOM("div", "settingItem", settingPanel);
 
-            const pageCountLabel = Utils.createDOM("div", "settingLabel", pageCountArea);
-            pageCountLabel.textContent = "表示ページ数";
+            // const pageCountLabel = Utils.createDOM("div", "settingLabel", pageCountArea);
+            // pageCountLabel.textContent = "表示ページ数";
 
-            // コントロール
-            const pageCountControl = Utils.createDOM("div", "pageCountControl", pageCountArea);
+            // // コントロール
+            // const pageCountControl = Utils.createDOM("div", "pageCountControl", pageCountArea);
 
-            const pageCountPrev = Utils.createDOM("div", "pageArrow", pageCountControl);
-            pageCountPrev.textContent = "◀";
+            // const pageCountPrev = Utils.createDOM("div", "pageArrow", pageCountControl);
+            // pageCountPrev.textContent = "◀";
 
-            const pageCountValue = Utils.createDOM("div", "pageCountValue", pageCountControl);
-            pageCountValue.textContent = config.visiblePages;
+            // const pageCountValue = Utils.createDOM("div", "pageCountValue", pageCountControl);
+            // pageCountValue.textContent = config.visiblePages;
 
-            const pageCountNext = Utils.createDOM("div", "pageArrow", pageCountControl);
-            pageCountNext.textContent = "▶";
+            // const pageCountNext = Utils.createDOM("div", "pageArrow", pageCountControl);
+            // pageCountNext.textContent = "▶";
 
-            const updatePageCount = (delta)=>{
-                let val = Number(config.visiblePages);
-                val += delta;
-                //
-                if(val < 1) val = 4;
-                if(val > 4) val = 1;
-                //
-                config.visiblePages = val;
-                config.pageStartAt = 1;
-                this.create(config);
-            }
+            // const updatePageCount = (delta)=>{
+            //     let val = Number(config.visiblePages);
+            //     val += delta;
+            //     //
+            //     if(val < 1) val = 4;
+            //     if(val > 4) val = 1;
+            //     //
+            //     config.visiblePages = val;
+            //     config.pageStartAt = 1;
+            //     this.create(config);
+            // }
 
-            pageCountPrev.addEventListener("click", () => updatePageCount(-1));
-            pageCountNext.addEventListener("click", () => updatePageCount(1));
+            // pageCountPrev.addEventListener("click", () => updatePageCount(-1));
+            // pageCountNext.addEventListener("click", () => updatePageCount(1));
 
         
             // ページ移動
@@ -782,9 +942,9 @@ class Note {
 
             shortcutContent.innerHTML = `
             Alt + ←→ : ページ送り<br>
-            右クリックドラッグ : ページ送り<br>
-            Alt + ↑↓ : 表示数変更
+            右クリックドラッグ : ページ送り
             `;
+            /*Alt + ↑↓ : 表示数変更*/
 
             // 開閉
             shortcutToggle.addEventListener("click", () => {
@@ -792,49 +952,86 @@ class Note {
             });
 
             // region ペンケース
-            const pencilCaseArea = Utils.createDOM("div", "pencilCaseArea", settingPanel);
+            {
+                const pencilCaseArea = Utils.createDOM("div", "pencilCaseArea", settingPanel);
 
-            const pencilCaseTitle = Utils.createDOM("div", "settingLabel", pencilCaseArea);
-            pencilCaseTitle.textContent = "ペンケース";
+                const pencilCaseTitle = Utils.createDOM("div", "settingLabel", pencilCaseArea);
+                pencilCaseTitle.textContent = "ペンケース";
 
-            const pencilList = Utils.createDOM("div", "pencilList", pencilCaseArea);
+                const pencilList = Utils.createDOM("div", "pencilList", pencilCaseArea);
 
-            const colors = [
-                "#222",
-                "#e74c3c",
-                "#3498db",
-                "#2ecc71",
-                "#f1c40f",
-                "#9b59b6"
-            ];
+                const colors = [
+                    "#222",
+                    "#e74c3c",
+                    "#3498db",
+                    "#2ecc71",
+                    "#f1c40f",
+                    "#9b59b6"
+                ];
 
-            colors.forEach(color => {
+                colors.forEach(color => {
 
-                const pencil = Utils.createDOM("div","pencilItem",pencilList);
-                pencil.draggable = true;
+                    const pencil = Utils.createDOM("div","pencilItem",pencilList);
+                    pencil.draggable = true;
 
-                pencil.innerHTML = Icon.pencil;
+                    pencil.innerHTML = Icon.pencil;
 
-                const svg = pencil.querySelector("svg");
-                svg.style.color = color;
+                    const svg = pencil.querySelector("svg");
+                    svg.style.color = color;
 
-                pencil.dataset.color = color;
+                    pencil.dataset.color = color;
 
-                pencil.addEventListener("dragstart",(e)=>{
-                    e.dataTransfer.setData("textColor", color);
+                    pencil.addEventListener("dragstart",(e)=>{
+                        e.dataTransfer.setData("textColor", color);
+                        ShareSpace.draggingDataKey = "textColor";
+                    });
+
                 });
+            }
 
-            });
+            // region 付箋
+            {
+                const stickyNoteArea = Utils.createDOM("div", "stickyNoteArea", settingPanel);
+
+                const stickyNoteTitle = Utils.createDOM("div", "settingLabel", stickyNoteArea);
+                stickyNoteTitle.textContent = "付箋";
+
+                const stickyNoteList = Utils.createDOM("div", "stickyNoteList", stickyNoteArea);
+
+                const colors = [
+                    "#fff9a3", // 薄い黄色（定番）
+                    "#ffd1dc", // ピンク
+                    "#c1f0f6", // 水色
+                    "#d5f5e3", // 緑
+                    "#f9e79f", // 濃い黄色
+                    "#e8daef"  // 紫
+                ];
+
+                colors.forEach(color => {
+
+                    const sticky = Utils.createDOM("div", "stickyItem", stickyNoteList);
+                    sticky.draggable = true;
+
+                    // 付箋っぽい見た目（SVGでもOKだけど簡易版）
+                    sticky.style.backgroundColor = color;
+                    sticky.style.width = "60px";
+                    sticky.style.height = "25px";
+                    sticky.style.borderRadius = "4px";
+                    sticky.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+                    sticky.style.transform = `rotate(${Math.random() * 6 - 3}deg)`;
+
+                    sticky.dataset.color = color;
+
+                    sticky.addEventListener("dragstart", (e) => {
+                        e.dataTransfer.setData("stickyNote", color);
+                        ShareSpace.draggingDataKey = "stickyNote";
+                    });
+
+                });
+            }
 
             // ページ追加ボタン
             const addPageBtn = Utils.createDOM("button", "addPageBtn", settingPanel, "ページ追加");
-            // {
-            //     // アイコン
-            //     const addIcon = Utils.createDOM("span", "icon-span");
-            //     addIcon.innerHTML = Icon.addCircle;
-            //     addIcon.style.color = "#4b4b4b";
-            //     addPageBtn.prepend(addIcon);
-            // }
             Utils.setStyleProps(addPageBtn, {marginTop: "20px"},)
             addPageBtn.onclick = ()=> {
                 this.addPage(this.dataObj, 1);
@@ -844,13 +1041,6 @@ class Note {
 
             // テンプレート作成ボタン
             const createTemplateBtn = Utils.createDOM("button", "addPageBtn", settingPanel, "テンプレートを作成");
-            // {
-            //     // アイコン
-            //     const editIcon = Utils.createDOM("span", "icon-span");
-            //     editIcon.innerHTML = Icon.edit;
-            //     editIcon.style.color = "#4b4b4b";
-            //     createTemplateBtn.prepend(editIcon);
-            // }
             createTemplateBtn.onclick = async ()=> {
                 // ソースページを選択
                 const selectedPageId = await this.selTemplate(createdPageIDArr, createdPageArr, "ソースを選択してください");
@@ -865,13 +1055,6 @@ class Note {
 
             // テンプレート適用ボタン
             const loadTemplateBtn = Utils.createDOM("button", "addPageBtn", settingPanel, "テンプレートを適用");
-            // {
-            //     // アイコン
-            //     const pushIcon = Utils.createDOM("span", "icon-span");
-            //     pushIcon.innerHTML = Icon.pushTransition;
-            //     pushIcon.style.color = "#4b4b4b";
-            //     loadTemplateBtn.prepend(pushIcon);
-            // }
             loadTemplateBtn.onclick = async ()=> {
                 // 適用対象を選択
                 const targetPageId = await this.selTemplate(createdPageIDArr, createdPageArr, "適用先のページを選択してください");

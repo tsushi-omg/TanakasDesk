@@ -28,6 +28,7 @@
     padding:20px;
     /* width: 60%; */
     background:#e5e5e5;
+    z-index: 5;
 
     /* background-image: url("note.svg"); 
     background-repeat: repeat;         
@@ -52,11 +53,10 @@
     flex-direction:column;
 }
 
-.repaging{}
-
 /* ホバーでめくるアニメーション */
 .repaging {
-    transform: rotateY(0deg); /* 正面に戻る */
+     /* 正面に戻る */
+    /* transform: rotateY(0deg); */
     box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* 影を強めて立体感 */
     /* background:#ecf5f8; */
 }
@@ -146,7 +146,7 @@
     /* font-family:"Segoe UI", sans-serif; */
     /* font-size:22px; */
     font-weight:600;
-
+    z-index: 100;
     color:#5a6b7a;           /* インクっぽい色 */
     background:rgba(255,255,255,0.75);
 
@@ -242,7 +242,7 @@
     display:none;
     margin-top:6px;
     line-height:1.6;
-    color:#666;
+    color:#82adf1;
 }
 
 .shortcutContent.open{
@@ -1019,4 +1019,118 @@ body{
     width: 100%;
     height: 100%;
     fill: currentColor;            /* 親のcolorを引き継ぐ */
+}
+
+/* 付箋エリア */
+.stickyNoteArea {
+    margin-top: 12px;
+}
+
+/* タイトル（既存流用でもOK） */
+.settingLabel {
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+/* 一覧 */
+.stickyNoteList {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* 付箋アイテム */
+.stickyItem {
+    width: 44px;
+    height: 44px;
+    border-radius: 4px;
+    cursor: grab;
+    position: relative;
+
+    /* 紙っぽい影 */
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+
+    /* 少しランダム感出したいならJSでrotateつけても◎ */
+    transform: rotate(-2deg);
+
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* ホバーで浮く */
+.stickyItem:hover {
+    transform: rotate(0deg) scale(1.08);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* ドラッグ中 */
+.stickyItem:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+/* 右上のめくれ表現 */
+.stickyItem::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    width: 0;
+    height: 0;
+
+    border-top: 12px solid rgba(255, 255, 255, 0.7);
+    border-left: 12px solid transparent;
+
+    border-top-right-radius: 2px;
+}
+
+/* pageはrelative必須 */
+.page {
+    position: relative;
+}
+
+/* 付箋 */
+.stickyNote {
+    position: absolute;
+    width: 120px;
+    /* height: 120px; */
+    height: 45px;
+    z-index: 10;
+
+    padding: 8px;
+    box-sizing: border-box;
+
+    font-size: 12px;
+    line-height: 1.4;
+
+    border-radius: 4px;
+    cursor: pointer;
+
+    /* 紙っぽさ */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+
+    /* 少し傾ける */
+    transform: rotate(-2deg);
+
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+/* ホバー */
+.stickyNote:hover {
+    transform: rotate(0deg) scale(1.05);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+}
+
+/* めくれ */
+.stickyNote::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    width: 0;
+    height: 0;
+
+    border-top: 16px solid rgba(255,255,255,0.7);
+    border-left: 16px solid transparent;
 }

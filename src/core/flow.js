@@ -793,12 +793,12 @@ function build (){
                     switch(obj.type){
                         // ノート
                         case DATABASE.types.note:{
-                            new Note(obj.content, ShareSpace.noteContainer, ShareSpace.settingContainer, obj);
+                            new Note(obj);
                             break;
                         }
                         // アプリ
                         case DATABASE.types.app:{
-                            new App(obj, ShareSpace.noteContainer, ShareSpace.settingContainer, obj);
+                            new App(obj);
                             break;
                         }
                     }
@@ -831,13 +831,13 @@ function build (){
                         // ノート
                         case DATABASE.types.note:{
                             // ノート起動
-                            new Note(obj.content, ShareSpace.noteContainer, ShareSpace.settingContainer, obj);
+                            new Note(obj);
                             break;
                         }
                         // アプリ
                         case DATABASE.types.app:{
                             // アプリ起動
-                            new App(obj, ShareSpace.noteContainer, ShareSpace.settingContainer, obj);
+                            new App(obj);
                             break;
                         }
                     }

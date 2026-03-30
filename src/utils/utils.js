@@ -168,13 +168,13 @@ class Utils{
     }
 
     static fadeMassage = (text)=> {
-        //
+        // 生成
         const msg = Utils.createDOM("div", "noteMessage", document.body);
         msg.textContent = text;
-        //
         msg.style.left = "50%";
         msg.style.top = "40%";
-        //
+
+        // フェード
         setTimeout(()=>{
             msg.classList.add("noteMessage_hide");
             setTimeout(()=> msg.remove(), 400);

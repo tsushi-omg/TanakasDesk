@@ -444,7 +444,9 @@ class GuideData{
             ]
           }
         ],
-        "meta": {}
+        "meta": {
+          stickyNotes: [],
+        }
       };
 
     static shortCutContentObj = 
@@ -887,6 +889,8 @@ class GuideData{
             ]
           }
         ],
-        "meta": {}
+        "meta": {
+          stickyNotes: [],
+        }
       }
 }
