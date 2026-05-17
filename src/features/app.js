@@ -14,6 +14,7 @@ class App{
      */
     static appNames = {
         replacer: "replacer",
+        RegexMaker: "RegexMaker",
     }
     static defaultApps = {
         // [this.appNames.replacer]: ()=> replacerApp(),
@@ -22,7 +23,7 @@ class App{
     /**
      * コンストラクタ
      */
-    constructor(pObj){
+    constructor(pObj, pParent, pSettingParent, appObj){
 
         // デフォルトアプリセットアップ（名称と関数の同期）
         setupDefaultApps();
@@ -31,14 +32,14 @@ class App{
         this.dataObj = pObj;
 
         // DOM挿入先
-        this.parentElement = ShareSpace.noteContainer;
-        this.settingParentElement = ShareSpace.settingContainer;
+        this.parentElement = pParent;
+        this.settingParentElement = pSettingParent;
 
         // メッセージ（ファイル名）
-        let config = {massage: pObj.name};
+        let config = {massage: appObj.name};
 
         // 読み取り専用ノートの場合
-        if(pObj.readOnly){
+        if(appObj.readOnly){
             // 参照を切る
             this.dataObj = JSON.parse(JSON.stringify(pObj));
             // メッセージ加工
@@ -195,4 +196,6 @@ class App{
 function setupDefaultApps(){
     // 置換
     App.defaultApps[App.appNames.replacer] = ()=> replacerApp();
+    // 正規表現メーカー
+    App.defaultApps[App.appNames.RegexMaker] = ()=> regexMakerApp();
 }

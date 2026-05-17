@@ -90,6 +90,22 @@ class DATABASE{
             active: false,
             readOnly: true,
         },
+        DefaultAppsRegexMaker:
+        {
+            type: this.types.app,
+            id: "Default-Apps-RegexMaker",
+            name: "正規表現メーカー",
+            appKey: App.appNames.RegexMaker,// FuncはJSON保存できないためキー名を保存
+            explain: "・正規表現メーカー\n・matchAllは空白の取り合いに注意",
+            storageData: {
+                key: "Default-Apps-RegexMaker",
+                value: null,
+            },
+            parentId: "Default-Apps-Folder",
+            createdAt:  Utils.getNow(true),
+            active: false,
+            readOnly: true,
+        },
 
     }
 
@@ -793,12 +809,12 @@ function build (){
                     switch(obj.type){
                         // ノート
                         case DATABASE.types.note:{
-                            new Note(obj);
+                            new Note(obj.content, ShareSpace.noteContainer, ShareSpace.settingContainer, obj);
                             break;
                         }
                         // アプリ
                         case DATABASE.types.app:{
-                            new App(obj);
+                            new App(obj, ShareSpace.noteContainer, ShareSpace.settingContainer, obj);
                             break;
                         }
                     }
@@ -831,13 +847,13 @@ function build (){
                         // ノート
                         case DATABASE.types.note:{
                             // ノート起動
-                            new Note(obj);
+                            new Note(obj.content, ShareSpace.noteContainer, ShareSpace.settingContainer, obj);
                             break;
                         }
                         // アプリ
                         case DATABASE.types.app:{
                             // アプリ起動
-                            new App(obj);
+                            new App(obj, ShareSpace.noteContainer, ShareSpace.settingContainer, obj);
                             break;
                         }
                     }
