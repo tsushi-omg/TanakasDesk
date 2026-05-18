@@ -180,7 +180,7 @@ async function regexMakerApp() {
     // テーブルに載せるパーツデータ定義
     const partsData = [
         { desc: "1つ以上の空白", noMatch: "\\s+", match: "(\\s+)" },
-        { desc: "0個以上の空白", noMatch: "\\s*", match: "(\\s*)" },
+        // { desc: "0個以上の空白", noMatch: "\\s*", match: "(\\s*)" },
         { desc: "任意の文字列（最短）", noMatch: ".+?", match: "(.+?)" }
     ];
 

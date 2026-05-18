@@ -138,9 +138,10 @@ function loadInit(){
 // region 既存データパッチ
  */
 function applyPatch(){
+    let attached = false;
     //------------------
     // 2026/03/27
-    // メタデータ領域
+    // ALL：メタデータ領域
     //------------------
     if(!DATABASE.dataObj.hasOwnProperty("meta")){
         DATABASE.dataObj.meta = 
@@ -148,5 +149,26 @@ function applyPatch(){
             // ノートテンプレート
             noteTemplate: [],
         };
+        attached = true;
+    }
+    //------------------
+    // 2026/03/30
+    // ノート：付箋領域
+    //------------------
+    for(let workObj of DATABASE.dataObj.data.filter(a=> a.type == DATABASE.types.note)){
+        let contentObj = workObj.content;
+        // ノート未初期化
+        if(Object.keys(contentObj).length == 0) continue;
+        // ノート初期化済みなら続行
+        let metaArea = contentObj.meta;
+        if(!metaArea.hasOwnProperty("stickyNotes")) {
+            metaArea.stickyNotes = [];
+            attached = true;
+        }
+    }
+
+    // 終了メッセージ
+    if(attached){
+        Utils.fadeMassage("パッチが適用されました");
     }
 }
