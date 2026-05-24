@@ -1,0 +1,146 @@
+Imports System.Runtime.Intrinsics
+
+Module PLC64
+
+    Sub Main(args As String)
+
+        Dim IN1 As New FPLA0000(New EntityArg(SourceType.DATABASE, ""))
+
+
+
+    End Sub
+
+End Module
+---------------------------------------------------------------------------------------------------------------------------------------
+Imports System.IO
+Imports System.Reflection
+Imports System.Security.Cryptography.X509Certificates
+
+''' <summary>
+''' FPLA0000-許可マスタエンティティ
+''' </summary>
+Public Class FPLA0000
+
+    '===================================================================
+    '項目定義
+    '===================================================================
+    Public Class Fields
+
+        ''' <summary>処理年度</summary>
+        <Length(4)> Public Property SyoriNendo As String = String.Empty
+
+        ''' <summary>県内外区分</summary>
+        <Length(4)> Public Property KngKbn As String = String.Empty
+
+        ''' <summary>許可コード</summary>
+        <Length(10)> Public Property KykCd As String = String.Empty
+
+    End Class
+
+    '===================================================================
+    ' 行情報配列
+    '===================================================================
+    Public Property Rows As New List(Of Fields)()
+
+    '===================================================================
+    ' コンストラクタ
+    '===================================================================
+    Public Sub New(entityArg As EntityArg)
+
+        ' フィールド名・桁数のDictionaryを作成
+        Dim fieldDic As New Dictionary(Of String, Integer)()
+        Dim props = GetType(Fields).GetProperties()
+        For Each prop In props
+            Dim attr = prop.GetCustomAttribute(Of LengthAttribute)()
+            Dim keta As Integer = attr.Value
+            fieldDic(prop.Name) = keta
+        Next
+
+        '指定されたデータを流し込む
+        If entityArg.SourceType = SourceType.DATABASE Then
+            '-------------------------------
+            'データベースから取得
+            '-------------------------------
+            ' フィールドループ
+            Dim rowData As New Fields()
+
+
+
+            ' データを行配列に追加
+            Me.Rows.Add(rowData)
+
+        ElseIf entityArg.SourceType = SourceType.DATAFILE Then
+            '-------------------------------
+            'データファイルから取得
+            '-------------------------------
+            Dim fieldLengths As Integer() = fieldDic.Values.ToArray()
+
+            Using parser As New Microsoft.VisualBasic.FileIO.TextFieldParser(entityArg.Path, System.Text.Encoding.GetEncoding("Shift_JIS"))
+                parser.TextFieldType = Microsoft.VisualBasic.FileIO.FieldType.FixedWidth
+                parser.SetFieldWidths(fieldLengths)
+
+                '一行ずつ固定長を分割（自動分割）
+                While Not parser.EndOfData
+
+                    Dim fieldsText As String() = parser.ReadFields()
+                    Dim rowData As New Fields()
+
+                    ' プロパティの定義順に流し込む
+                    For i As Integer = 0 To props.Length - 1
+                        Dim fileValue As String = If(fieldsText(i), String.Empty)
+                        props(i).SetValue(rowData, fileValue)
+                    Next
+
+                    ' データを行配列に追加
+                    Me.Rows.Add(rowData)
+                End While
+            End Using
+
+        End If
+
+    End Sub
+
+End Class
+---------------------------------------------------------------------------------------------------------------------------------------
+''' <summary>
+''' エンティティのソースタイプ
+''' </summary>
+Public Enum SourceType
+    'データベース
+    DATABASE = 0
+    'データファイル
+    DATAFILE = 1
+End Enum
+
+''' <summary>
+''' エンティティの共通引数
+''' </summary>
+Public Class EntityArg
+
+    Public Property SourceType As SourceType
+    Public Property Path As String
+    Public Property SearchKeys As String
+
+    Public Sub New(sourceType As SourceType, arg As String)
+        Me.SourceType = sourceType
+
+        'ソースタイプがデータベースなら検索キーを、データファイルならパスを受け取る
+        If (sourceType = SourceType.DATABASE) Then
+            Me.SearchKeys = arg
+        ElseIf (sourceType = SourceType.DATAFILE) Then
+            Me.Path = arg
+        End If
+    End Sub
+End Class
+
+''' <summary>
+''' プロパティにカスタム属性"Length"を追加
+''' </summary>
+<AttributeUsage(AttributeTargets.Property)>
+Public Class LengthAttribute
+    Inherits Attribute
+    Public Property Value As Integer
+    Sub New(value As Integer)
+        Me.Value = value
+    End Sub
+End Class
