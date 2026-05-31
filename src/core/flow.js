@@ -889,3 +889,193 @@ function build (){
     // ロケーション移動ボタン使用可否
     ShareSpace.setLocationButtonStyle();
 }
+
+/*
+function cobolToVB(lines, fields){
+
+    // ------------------------------------------------------------
+    // ワーク用変数
+    // ------------------------------------------------------------
+    let r;
+    let m;
+    let r2;
+    let m2;
+
+    // ------------------------------------------------------------
+    // 一文につなぐ
+    // ------------------------------------------------------------
+    let line = "";//todo
+    {
+
+    }
+
+    // ------------------------------------------------------------
+    // フィールドのマージ（コピー句）
+    // ------------------------------------------------------------
+    {
+        // PG変数に識別子を付与
+        fields.forEach(a=>{
+            a.from = "PG";
+        })
+
+        // 使用されている全コピー句を取得（サブルーチン経由含む）
+        let copyNameArr = [];
+
+        // PG内
+        r = "";//todo
+        m = line.matchAll(r);
+        if(m){
+            [...m].forEach(a=>{
+                if(!copyNameArr.includes(a)) copyNameArr.push(a[1]);
+            })
+        }
+
+        // サブルーチン経由
+        r = "";//todo
+        m = line.matchAll(r);
+        if(m){
+            let subFile = AllFiles.data.find(a=> a.fileName == `${m[1]}.cob`);
+            r2 = "";
+            m2 = utils.formatCobol(subFile.content.split("\n")).join(" ").matchAll(r2) //todo
+            if(m2){
+                [...m2].forEach(a=>{
+                    if(!copyNameArr.includes(a)) copyNameArr.push(a[1]);
+                })
+            }
+        }
+
+        // フィールドのマージ
+        copyNameArr.forEach(fn=>{
+            let file = AllFiles.data.find(a=> a.fileName == `${fn}.cbl`);
+            let field = utils.getFields(utils.format(file.content));//todo
+            field.from = fn;
+            fields.push(field);
+        })
+    }
+    //--
+
+    // 現在の結果格納用
+    let results = [];
+
+    // ------------------------------------------------------------
+    // 1文字ずつループ
+    // ------------------------------------------------------------
+    const convert = (pLine, delivery = null)=>{
+        
+        // 結果配列参照渡し（中間抜き出しならデリバリーで格納）
+        let resultClone = delivery ? delivery.deliResults : results;
+
+        // 開始位置
+        let nextStartAt = -1;
+
+        // ループ
+        while(nextStartAt < pLine.length){
+
+            // 残りの解析対象コード
+            let currLine = pLine.substring(nextStartAt);
+
+            // 変換制御クラス
+            let con = new ConvertSets(()=> convert(), fields);
+            
+            // 変換表
+            for(let rule of con.rules){
+
+                let match = currLine.match(rule.regex);
+                if(match){
+                    // 結果格納・終了
+                    resultClone.push(...rule.getVBLines())
+                    nextStartAt += match[0].length;
+                    break;
+                }
+            }
+        }
+
+        // マッチなし
+        resultClone.push(nextStartAt[0]);
+        nextStartAt++;
+    }
+
+    // 変換実行
+    convert(line);
+        
+}
+*/
+
+
+
+/*
+
+class ConvertSets{
+
+    // 変換関数
+    convert;
+    
+    // フィールド情報
+    fields;
+
+    constructor(convert, fields){
+        this.convert = convert;
+        this.fields = fields;
+    }
+
+    // ==============================================================
+    // ユーティリティ
+    // ==============================================================
+    static isKomoku = ()=>{
+
+    }
+    static isGroupKomoku = ()=>{
+
+    }
+    static getChildIDs = ()=>{
+        
+    }
+
+    // ==============================================================
+    // 変換表（先頭マッチ）
+    // ==============================================================
+    rules = [
+        // ----------------------------------------------------
+        // move (a) to (b c d).
+        // ----------------------------------------------------
+        {
+            id: "move (a) to (b c d).",
+            regex: /^/i,
+            // recursions:[],
+            // group:"",
+            // redefines:"",
+            // occurs:"",
+            getVBLines: (m)=>{
+                let res = []
+
+                // 1, to b c d.分のマッチ複製
+                let arr = m[2].split(/\s+/);
+                for(let to of arr){
+                    if(!to) continue;
+
+                    // 2, 代入値がグループ項目ならその子要素にバラして複製
+                    let valueArr = [m[1]];
+                    if(this.isKomoku(m[1]) && this.isGroupKomoku(m[1])){
+                        valueArr = this.getChildIDs(m[1]);
+                    }
+
+                    // 3, 代入先がグループ項目ならその子要素にバラして複製
+                    let toArr = [to];
+                    if(this.isKomoku(to) && this.isGroupKomoku(to)){
+                        toArr = this.getChildIDs(to);
+                    }
+
+                    // VB化して返却
+                    for(let t of toArr){
+                        for(let v of valueArr){
+                            res.push(`${t} = ${v}`)
+                        }
+                    }
+                }
+                return res;
+            }
+        }
+    ]
+}
+
+*/
