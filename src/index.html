@@ -36,6 +36,223 @@
     <script src="core/action.js"></script>
     <script src="core/flow.js"></script>
     
+
+
+
+/*
+
+function cobolToVB(lines, fields){
+
+    // ------------------------------------------------------------
+    // ワーク用変数
+    // ------------------------------------------------------------
+    let r;
+    let m;
+    let r2;
+    let m2;
+
+    // ------------------------------------------------------------
+    // 一文につなぐ
+    // ------------------------------------------------------------
+    let line = "";//todo
+    {
+
+    }
+
+    // ------------------------------------------------------------
+    // フィールドのマージ（コピー句）
+    // ------------------------------------------------------------
+    {
+        // PG変数に識別子を付与
+        fields.forEach(a=>{
+            a.from = "PG";
+        })
+
+        // 使用されている全コピー句を取得（サブルーチン経由含む）
+        let copyNameArr = [];
+
+        // PG内
+        r = "";//todo
+        m = line.matchAll(r);
+        if(m){
+            [...m].forEach(a=>{
+                if(!copyNameArr.includes(a)) copyNameArr.push(a[1]);
+            })
+        }
+
+        // サブルーチン経由
+        r = "";//todo
+        m = line.matchAll(r);
+        if(m){
+            let subFile = AllFiles.data.find(a=> a.fileName == `${m[1]}.cob`);
+            r2 = "";
+            m2 = utils.formatCobol(subFile.content.split("\n")).join(" ").matchAll(r2) //todo
+            if(m2){
+                [...m2].forEach(a=>{
+                    if(!copyNameArr.includes(a)) copyNameArr.push(a[1]);
+                })
+            }
+        }
+
+        // フィールドのマージ
+        copyNameArr.forEach(fn=>{
+            let file = AllFiles.data.find(a=> a.fileName == `${fn}.cbl`);
+            let field = utils.getFields(utils.format(file.content));//todo
+            field.from = fn;
+            fields.push(field);
+        })
+    }
+    //--
+
+    // ======================================================================
+    // ワーク変数
+    // ======================================================================
+    // 結果
+    let resultLine = "";
+
+    // 保留トークン
+    let holdingTokens = [];
+
+    // 現在のスコープ
+    let currScopes = [];
+
+    // ======================================================================
+    // ユーティリティ
+    // ======================================================================
+    /**
+     * (結果|デリバリー)へ行追加（インデント考慮）
+     * @param {*} val 
+     * @param {*} delivery 
+     */
+    const mergeResult = (val, delivery)=>{
+        let indents = "";
+        for(let i = 1; i <= currScopes.length; i++){
+            indents += "\t";
+        }
+        if(delivery) delivery+=`${indents}${val}`;
+        else resultLine += `${indents}${val}`;
+    }
+
+    /**
+     * 小文字化して比較
+     * @param {*} a 
+     * @param {*} b 
+     * @returns 
+     */
+    const equals = (a, b)=>{
+        return a.toLowerCase() == b.toLowerCase()
+    }
+
+    // ======================================================================
+    // 変換
+    // ======================================================================
+    function convert(pLine, delivery = ""){
+
+        // トークン配列
+        const tokenArr = line.split(/\s+/)
+
+        // 臨時関数
+        let customFunc = null;
+
+        // トークンループ
+        for(let token of tokenArr){
+
+            // ------------------------------------------------
+            // 指定の臨時関数を実行
+            // ------------------------------------------------
+            if(customFunc){
+                // 共通引数：トークン
+                customFunc(token);
+            }
+
+            // ------------------------------------------------
+            // 最後に実行
+            // ------------------------------------------------
+            let runNext = false;
+            const next = ()=> {
+                // ------------------------------------------------
+                // ピリオド（全スコープの強制クローズ）
+                // ------------------------------------------------
+                if(equals(token, ".") || token.endsWith(".")){
+
+                    // 最新スコープから強制クローズ
+                    currScopes.reverse();
+                    const currScopesCopy = JSON.parse(JSON.stringify(currScopes));
+                    for(let scope of currScopesCopy){
+                        let sets = {
+                            "If"        :"End If",
+                            "EVALUATE"  :"END-EVALUATE",
+                            "PERFORM"   :"END-PERFORM",
+                            "COMPUTE"   :"END-COMPUTE",
+                        }
+                        currScopes.pop();
+                        mergeResult(`${token == "." ? "" : "\n"}${sets[scope]}`)
+                    }
+                }
+                runNext = true;
+            }
+
+            // ------------------------------------------------
+            // IF
+            // ------------------------------------------------
+            {
+                if(equals(token, "IF")){
+
+                    // 格納
+                    mergeResult("\nIf ");
+
+                    // Then挿入用臨時関数（cobolにThenは使われていない想定）
+                    if(customFunc != null) {
+                        console.log("臨時関数の競合が発生しましたが、IF用に塗り替えて続行します")
+                    }
+                    customFunc = (pToken)=>{
+                        let arr = ["IF","PERFORM","EVALUATE","COMPUTE","MOVE","WRITE","READ"];
+                        if(arr.includes(pToken)){
+                            // Then挿入
+                            mergeResult("Then\n")
+                            // ネストインクリメント
+                            currScopes.push("If");
+                            // 臨時関数初期化
+                            customFunc = null;
+                        }
+                    }
+                    
+                    // 次へ
+                    next();
+                }
+            }
+            // ------------------------------------------------
+            // END-IF
+            // ------------------------------------------------
+            {
+                if(equals(token, "END-IF")){
+
+                    // 格納
+                    mergeResult("\nEnd If\n");
+                    
+                    // ネストデクリメント
+                    currScopes.pop();
+                    
+                    // 次へ
+                    next();
+                }
+            }
+            // ------------------------------------------------
+            // 最後に実行
+            // ------------------------------------------------
+            if(!runNext) next();
+
+
+            // 処理なしなら保留配列へ（ZEROやSPACEなどの予約後は変換してから保留に投げる）
+            holdingTokens.push(token);
+        }
+    }
+
+    // 変換実行
+    convert(line);
+
+}
+*/
     <script>
         // 初期化
         load();
